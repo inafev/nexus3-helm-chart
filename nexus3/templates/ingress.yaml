@@ -1,0 +1,39 @@
+{{- if eq .Values.expose.type "ingress" -}}
+{{- $ingress := .Values.expose.ingress -}}
+{{- $tls := .Values.expose.tls -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "nexus3.fullname" . }}
+  labels:
+{{ include "nexus3.labels.standard" . | indent 4 }}
+  annotations:
+{{ toYaml $ingress.annotations | indent 4 }}
+spec:
+  {{- if $tls.enabled }}
+  tls:
+  - hosts:
+    - {{ $ingress.host }}
+    - {{ $ingress.repo }}
+    {{- if $tls.secretName }}
+    secretName: {{ $tls.secretName }}
+    {{- else }}
+    secretName: {{ include "nexus3.fullname" . }}
+    {{- end }}
+  {{- end }}
+  rules:
+  - host: {{ $ingress.host }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ include "nexus3.fullname" . }}
+          servicePort: http
+  - host: {{ $ingress.repo }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ include "nexus3.fullname" . }}
+          servicePort: {{ .Values.docker.servicePort }}
+{{- end }}

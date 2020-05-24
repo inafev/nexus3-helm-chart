@@ -1,0 +1,15 @@
+appVersion: 0.2.0
+description: Sonatype Nexus Repository Manager 3
+home: https://github.com/sonatype/docker-nexus3
+icon: https://secure.gravatar.com/avatar/614e0f6491dbb293e540190b02b3024e.jpg
+keywords:
+- nexus3
+- sonatype
+maintainers:
+- email: ziling.zhong@hand-china.com
+  name: 钟梓凌
+name: nexus3
+sources:
+- https://github.com/sonatype/docker-nexus3
+- https://hub.docker.com/r/sonatype/nexus3
+version: 0.2.0

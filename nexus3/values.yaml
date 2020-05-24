@@ -1,0 +1,128 @@
+replicaCount: 1
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+
+image:
+  #repository: dockerhub.azk8s.cn/sonatype/nexus3   # unreachable - May 2020
+  repository: sonatype/nexus3
+  tag: 3.23.0
+  pullPolicy: IfNotPresent
+## Additional deployment annotations
+annotations: {}
+## Additional replica annotations
+podAnnotations: {}
+resources: 
+  limits:
+    memory: 3Gi
+    cpu: 1
+  requests:
+    memory: 2Gi
+    cpu: 100m
+#nodeSelector: {}
+nodeSelector: 
+  kubernetes.io/hostname: <my_digital_ocean_worker_node_pool-ztospgm8l-3cl8p>
+tolerations: []
+affinity: {}
+env:
+  INSTALL4J_ADD_VM_PARAMS: >-
+    -Xms2g -Xmx2g -XX:MaxDirectMemorySize=2g -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+
+expose:
+  # Set the way how to expose the service. Set the type as "ingress","clusterIP","loadBalancer"
+  # or "nodePort" and fill the information in the corresponding 
+  # section
+  type: ingress
+  tls:
+    enabled: true
+    # Fill the name of secret if you want to use your own TLS certificate
+    # and private key. The secret must contain keys named tls.crt and 
+    # tls.key that contain the certificate and private key to use for TLS
+    # The certificate and private key will be generated automatically if 
+    # it is not set
+    secretName: ""
+    certExpiry: 3560
+  ingress:
+    host: nexus.<my_public_dns_domain_name.com>
+    repo: docker.<my_public_dns_domain_name.com>
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      kubernetes.io/tls-acme: "true"
+  clusterIP:
+    # The name of ClusterIP service
+    #name: nexus3
+    # The service port nexus3 listens on when serving with HTTP
+    port: 80
+  nodePort:
+    # The name of NodePort service
+    # name: nexus3
+    # The service port nexus3 listens on when serving with HTTP
+    port: 80
+    # The node port nexus3 listens on when serving with HTTP
+    # nodePort: 30008
+  loadBalancer:
+    # The name of LoadBalancer service
+    # name: nexus3
+    # The service port nexus3 listens on when serving with HTTP
+    port: 80
+
+# expose:
+#   # Set the way how to expose the service. Set the type as "ingress","clusterIP","loadBalancer"
+#   # or "nodePort" and fill the information in the corresponding 
+#   # section
+#   type: ingress
+#   tls:
+#     enabled: true
+#     # Fill the name of secret if you want to use your own TLS certificate
+#     # and private key. The secret must contain keys named tls.crt and 
+#     # tls.key that contain the certificate and private key to use for TLS
+#     # The certificate and private key will be generated automatically if 
+#     # it is not set
+#     secretName: ""
+#     certExpiry: 3560
+#   ingress:
+#     host: repo.redhatspain.com
+#     annotations:
+#       ingress.kubernetes.io/ssl-redirect: "true"
+#       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+#       ingress.kubernetes.io/proxy-body-size: "0"
+#       nginx.ingress.kubernetes.io/proxy-body-size: "0"
+#       kubernetes.io/tls-acme: "true"
+#   clusterIP:
+#     # The name of ClusterIP service
+#     #name: nexus3
+#     # The service port nexus3 listens on when serving with HTTP
+#     port: 8083
+
+# The persistence is enabled by default and a default StorageClass
+# is needed in the k8s cluster to provision volumes dynamicly. 
+# Specify another StorageClass in the "storageClass" or set "existingClaim"
+# if you have already existing persistent volumes to use
+persistence:
+  enabled: true
+  #enabled: false
+  # Setting it to "keep" to avoid removing PVCs during a helm delete 
+  # operation. Leaving it empty will delete PVCs after the chart deleted
+  #resourcePolicy: "keep"
+  resourcePolicy: ""
+  # Use the existing PVC which must be created manually before bound
+  #existingClaim: "nexus"
+  # Specify the "storageClass" used to provision the volume. Or the default
+  # StorageClass will be used(the default).
+  # Set it to "-" to disable dynamic provisioning
+  #storageClass: "do-block-storage"
+  storageClass: ""
+  # accessMode: ReadWriteMany     (Digital Ocean: unsupported access mode MULTI_NODE_MULTI_WRITER)
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  securityContext:
+    fsGroup: 200         # Nexus3 on Kubernetes requirement: fsGroup 200 or 2000  (https://github.com/sonatype/docker-nexus/issues/31)
+
+docker:
+  servicePort: 443
+  containerPort: 8083
